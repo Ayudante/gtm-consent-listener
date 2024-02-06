@@ -14,10 +14,12 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "GTM Consent Listener",
-  "categories": ["UTILITY"],
+  "categories": [
+    "UTILITY"
+  ],
   "brand": {
-    "id": "brand_dummy",
-    "displayName": ""
+    "id": "github.com_Ayudante",
+    "displayName": "Ayudante"
   },
   "description": "With Consent Mode implemented in Google Tag Manager, a custom event is fired when the status changes.",
   "containerContexts": [
@@ -45,6 +47,22 @@ ___TEMPLATE_PARAMETERS___
       },
       {
         "type": "CHECKBOX",
+        "name": "ad_user_data",
+        "checkboxText": "ad_user_data ( _on | _off )",
+        "simpleValueType": true,
+        "defaultValue": true,
+        "alwaysInSummary": true
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "ad_personalization",
+        "checkboxText": "ad_personalization ( _on | _off )",
+        "simpleValueType": true,
+        "defaultValue": true,
+        "alwaysInSummary": true
+      },
+      {
+        "type": "CHECKBOX",
         "name": "analytics_storage",
         "checkboxText": "analytics_storage ( _on | _off )",
         "simpleValueType": true,
@@ -53,8 +71,8 @@ ___TEMPLATE_PARAMETERS___
       },
       {
         "type": "CHECKBOX",
-        "name": "functional_storage",
-        "checkboxText": "functional_storage ( _on | _off )",
+        "name": "functionality_storage",
+        "checkboxText": "functionality_storage ( _on | _off )",
         "simpleValueType": true,
         "defaultValue": true,
         "alwaysInSummary": true
@@ -114,6 +132,8 @@ ___TEMPLATE_PARAMETERS___
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
 // ---- テンプレートAPI
+//const log = require('logToConsole');
+//log(data);
 const queryPermission = require('queryPermission');
 const addConsentListener = require('addConsentListener');
 const createQueue = require('createQueue');
@@ -123,9 +143,8 @@ const dataLayerPush = createQueue('dataLayer');
 const addConsent = function(cType){
 	let wasCalled = false;
 	addConsentListener(cType, (consentType, granted) => {
-		if (wasCalled) return;
+		if (wasCalled) return;  // 反応は1度だけ
 		wasCalled = true;
-
 		let changeState = '';
 		switch(granted){
 			case true:
@@ -140,21 +159,18 @@ const addConsent = function(cType){
 };
 
 // ---- 各同意タイプへイベントをバインド
-if (queryPermission('access_consent', 'ad_storage', 'read') && data.ad_storage) {
-	addConsent('ad_storage');
-}
-if (queryPermission('access_consent', 'analytics_storage', 'read') && data.analytics_storage) {
-	addConsent('analytics_storage');
-}
-if (queryPermission('access_consent', 'functional_storage', 'read') && data.functional_storage) {
-	addConsent('functional_storage');
-}
-if (queryPermission('access_consent', 'personalization_storage', 'read') && data.personalization_storage) {
-	addConsent('personalization_storage');
-}
-if (queryPermission('access_consent', 'security_storage', 'read') && data.security_storage) {
-	addConsent('security_storage');
-}
+const permissionCheck = function(cType){	// 権限＆ON/OFFチェック + イベントリスナーを追加する関数
+	if (queryPermission('access_consent', cType, 'read') && data[cType]) {
+		addConsent(cType);
+	}
+};
+permissionCheck('ad_storage');
+permissionCheck('ad_user_data');
+permissionCheck('ad_personalization');
+permissionCheck('analytics_storage');
+permissionCheck('functionality_storage');
+permissionCheck('personalization_storage');
+permissionCheck('security_storage');
 // -- Custom consent type
 if(data.custom){
 	data.custom.forEach(function(element){
@@ -325,7 +341,7 @@ ___WEB_PERMISSIONS___
                 "mapValue": [
                   {
                     "type": 1,
-                    "string": "functional_storage"
+                    "string": "functionality_storage"
                   },
                   {
                     "type": 8,
@@ -388,6 +404,68 @@ ___WEB_PERMISSIONS___
                   {
                     "type": 1,
                     "string": "security_storage"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "consentType"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "ad_user_data"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "consentType"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "ad_personalization"
                   },
                   {
                     "type": 8,
